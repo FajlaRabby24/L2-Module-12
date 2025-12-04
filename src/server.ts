@@ -3,62 +3,21 @@ import config from "./config";
 const app = express();
 const port = config.port;
 import initDB, { pool } from "./config/db";
+import { logger } from "./middleware/logger";
+import userRouter from "./modules/user/user.routes";
 
 // parser
 app.use(express.json());
 
 initDB();
 
-// logger middleware
-const logger = (req: Request, res: Response, next: NextFunction) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}\n`);
-  next();
-};
-
 app.get("/", logger, (req: Request, res: Response) => {
   res.send("Hello World! Next");
 });
 
-// create user
-app.post("/users", async (req: Request, res: Response) => {
-  try {
-    const { name, email } = req.body;
-    const result = await pool.query(
-      `INSERT INTO users(name, email) VALUES($1, $2) RETURNING *`,
-      [name, email]
-    );
-    console.log(result.rows[0]);
+// TODO -> user crud
 
-    res.status(201).json({
-      success: true,
-      message: "Data inserted",
-      data: result.rows[0],
-    });
-  } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-});
-
-// get all user
-app.get("/users", async (req: Request, res: Response) => {
-  try {
-    const result = await pool.query(`SELECT * FROM users`);
-
-    res.status(200).json({
-      success: true,
-      message: "user retrived successfully!",
-      data: result.rows,
-    });
-  } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-});
+app.use("/users", userRouter);
 
 // get single user
 app.get("/users/:id", async (req: Request, res: Response) => {
