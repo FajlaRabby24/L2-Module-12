@@ -45,13 +45,26 @@ app.get("/", (req: Request, res: Response) => {
   res.send("Hello World! Next");
 });
 
-app.post("/", (req: Request, res: Response) => {
-  console.log(req.body);
+app.post("/users", async (req: Request, res: Response) => {
+  try {
+    const { name, email } = req.body;
+    const result = await pool.query(
+      `INSERT INTO users(name, email) VALUES($1, $2) RETURNING *`,
+      [name, email]
+    );
+    console.log(result.rows[0]);
 
-  res.status(201).json({
-    success: true,
-    message: "Api is working",
-  });
+    res.status(201).json({
+      success: true,
+      message: "Data inserted",
+      data: result.rows[0],
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
 });
 
 app.listen(port, () => {
