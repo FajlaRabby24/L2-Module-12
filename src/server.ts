@@ -4,12 +4,29 @@ const port = 5000;
 import { Pool } from "pg";
 import config from "./config";
 
+// parser
+app.use(express.json());
+
+// database
 const pool = new Pool({
   connectionString: config.postgres_url,
 });
+const initDB = async () => {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS users(
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(150) UNIQUE NOT NULL,
+    age INT,
+    phone VARCHAR(15),
+    address TEXT,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+    )
+    `);
+};
 
-// parser
-app.use(express.json());
+// initDB();
 
 app.get("/", (req: Request, res: Response) => {
   res.send("Hello World! Next");
